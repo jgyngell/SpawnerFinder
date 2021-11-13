@@ -1,0 +1,523 @@
+name: RedstoneChips
+main: org.redstonechips.RedstoneChips
+version: 1.1
+api-version: 1.14
+author: eisental
+description: Core RedstoneChips plugin for building integrated redstone circuits.
+website: http://eisental.github.com/RedstoneChips
+load: startup
+commands:
+  redstonechips:
+    description: General plugin information.
+    usage: |
+      `/redstonechips`
+    aliases: [rc]
+  rclist:
+    aliases: [rcls]    
+    description: Prints a list of active chips.
+    usage: |
+      `/rclist [world-name|all|this] [<filter-type>: <arg>,<arg>,<arg>;...]`
+
+      - Use `/rclist` to list all chips in the current world or, when used from the server console, all chips on the server.
+      - Use `/rclist all` as a player to see a list of all chips on the server
+      - Use `/rclist <world-name>` to list all circuits in a specific world.
+
+      To show only certain kinds of chips you can use a filter. There are several filter types:
+      
+      - `location: <x>,<y>,<z>,[radius]` - Show only circuits in a radius around the location.
+      - `location: this, [radius]` - Uses your current location.
+      - `chunk: <x>,<z>` - Show only circuits in the specified chunk. `chunk: this` will use your current chunk
+      - `class: <class-name>` - Show only circuits of the specified class. You can use partial class names.
+      
+      You can combine different filters by separating them with a semicolon (;). You can also use partial filter type names.
+
+      Examples:
+      
+      - `/rclist this ch: this; cl: pix` - List every pixel circuit in your current world and chunk.
+      - `/rclist this loc: this, 10; class: decoder` - List every decoder in a 10 block radius around you.
+  rcclasses:
+    aliases: [rccl]    
+    description: Prints a list of installed chip types.
+    usage: |
+      `/rcclasses`
+  rcprefs:
+    description: Allows to view and change the plugin's preferences.
+    usage: |
+      `/rcprefs [pref key] [new value]`
+
+      Use the command with no arguments to list all preferences values.
+      To change a preference value use `/rcprefs <pref key> <new value>`.
+  rcdebug:
+    aliases: [rcdb]
+    description: Register yourself as a chip debugger.
+    usage: |
+      `/rcdebug [id] [io|.|clear|list]`
+
+      - Pointing at a chip and running the command will toggle debugging the chip.
+      - To debug or stop debugging a chip remotely use `/rcdebug <chip id>`.
+      - Pause debugging for all chips by running `/rcdebug`.
+      - List all debugged chips by running `/rcdebug list`.
+      - Clear your debug list by running `/rcdebug clear`.
+      - To receive a debug message whenever a chip pin changes its state use `/rcdebug [chip id] io`. 
+      
+      You can use `/rcdb` as a shortcut or type only part of the command. 
+      For ex. `/rcdb l` is equivalent to `/rcdebug list`.
+  rcpin:
+    description: Prints information about a chip pin.
+    usage: |
+      Point towards an output lever or input redstone source.
+      Prints the pin number (starting at 0), pin type (input/output), and current state (on/off) of the pin.
+  rcactivate:
+    aliases: [rca]    
+    description: Activates a chip.
+    usage: |
+      `/rcactivate [-v|-v1|-v2]`
+      
+      Point towards the chip sign and execute the command.
+      To activate a chip built with different input, output or interface block types then set in the preferences use: `/rcactivate <inputBlockType> <outputBlockType> <interfaceBlockType>`.
+      
+      Use `/rcactivate <-v|-v1|-v2>` to receive debug messages from the chip scanner.
+  rcdestroy:
+    description: Destroys a chip and removes its blocks.
+    usage: |
+      Point towards a block of the chip you wish to destroy and enter the command.
+      This command is disabled by default. To enable it use `/rcprefs enableDestroyCommand true`.
+  rcbreak:
+    aliases: [rcb]    
+    description: Deactivates a chip without removing its blocks.
+    usage: |
+      `/rcbreak [id]`
+
+      Point towards a block of the chip or enter the its id as an argument.
+  rctype:
+    aliases: [rct]    
+    description: General command for sending input to a chip.
+    usage: |
+      `/rctype [...]`
+
+      Use by pointing at a block and enter the command. Each chip reacts to it differently.
+      Check the relevant chip documentation for more information about usage.
+  rcsend:
+    aliases: [rcs]    
+    description: Transmit data over a wireless channel.
+    usage: |
+      `/rcsend <channel> [start-bit:]data ... [start-bit:]data
+      
+      data can be either an integer number, ascii character, or the letter 'b' followed by a binary number.
+      ascii characters may optionally be surrounded by quotes ''. For example, `/rcs chan '8'`
+  rcreset:
+    aliases: [rcr]    
+    description: Rescans and reactivates a chip.
+    usage: |
+      `/rcreset [id|all]`
+
+      Use by pointing towards the chip or by using the its id as an argument.
+      Reset a circuit to scan for new i/o blocks or sign arguments and apply any changes.
+
+      Running `/rcreset all` will reset all active chips. Use with caution!
+  rcenable:
+    description: Enables a disabled chip.
+    usage: |
+      `rcenable [id]`
+      
+      Use by pointing towards the chip or by using the its id as an argument.
+  rcdisable:
+    description: Disables a chip. 
+    usage: |
+      `/rcdisable [circuit-id]`
+      
+      A disabled chip is still active but does not respond to any input. 
+      Use by pointing towards the chip or by using its id as an argument.
+      To reenable the chip use /rcenable. Disabled chip sign color changes to gray.
+  rcchannels:
+    aliases: [rcch]
+    description: Prints a list of all wireless broadcast channels.
+    usage: |
+      `/rcchannels [channel-name]`
+      
+      Use a channel name as an argument to print info about that channel.
+  rcinfo:
+    aliases: [rci]    
+    description: Prints a lot of useful information about a chip.
+    usage: |
+      `/rcinfo [circuit-id]`
+
+      Use by pointing at a block of the chip you want to get info about or use it's id as an argument.
+  rcfixioblocks:
+    description: Replaces i/o blocks that use incorrect materials.
+    usage: |
+      `/rcfixioblocks [circuit-id]`
+
+      Use by pointing at the chip you want to fix, or use its id as an argument.
+      Any i/o blocks using a different block type than those set in the plugin's preferences are replaced to the correct material.
+  rcsel:
+    description: Select and edit a group of chips.
+    usage: |
+      To add/remove chips from selection:
+      - `/rcsel` - Switch selection mode on/off. When on, right-clicking a chip block adds it to selection.
+      - `/rcsel cuboid` - Select chips in a WorldEdit cuboid or start to define a cuboid.
+      - `/rcsel id <chip-id>...<chip-id>` - Select chips by a list of ids.
+      - `/rcsel list` - Lists all chips in the selection
+      - `/rcsel clear` - Clears the current selection.
+
+      To run a command on all chips in selection:
+      The following work the same as their single chip versions.        
+      - `/rcsel activate [<input type> <output type> <interface block type>]`, 
+      - `/rcsel break`
+      - `/rcsel destroy`
+      - `/rcsel reset`
+      - `/rcsel enable`
+      - `/rcsel disable` 
+      - `/rcsel fixioblocks`
+      
+      `/rcsel activate` requires a defined cuboid (either a WorldEdit cuboid or an RedstoneChips one).      
+  rcarg:
+    description: Replace, add or clear chip sign arguments.
+    usage: |
+      `/rcarg <arg-number|add|clear> <arg-value>...<arg-number|add|clear> <arg-value>`
+
+      Use by pointing at the circuit you want to edit and enter the command.
+      To change an existing argument value use `/rcarg <arg-number> <arg-value>`, where arg-number is the
+      sign argument number (starting from 1), and arg-value is the new value for this argument.
+
+      To add an argument as the last use `/rcarg add <arg-value>`.
+      To remove an argument use `/rcarg clear <arg-number>`.
+
+      You can make changes to more than 1 argument by typing additional command arguments. For ex. `/rcarg 1 val clear 2`
+      will set the 1st argument to val and remove the 2nd argument.
+  rcsave:
+    description: Saves all chip data to file.
+    usage: |
+      Makes sure all chips are intact and saves their current state.
+      You don't need to use it unless there's a problem with the automatic data save.
+  rcload:
+    description: Reloads chip data from file.
+    usage: |
+      This will reset any changes made to the chips state since the last save occured.
+  rchelp:
+    description: Prints a list or description of all RC commands.
+    usage: |
+      Use `/rchelp <command name>` to get help about a specific command.
+      Use `/rchelp all` to get a printout of all help content available.
+  rcp:
+    description: Moves to a different page when typed after using a command with paging.
+    usage: |
+      `/rcp [page #|prev|next|last]`
+      Running the command without arguments will cause it to move to the next page or go back to the first if the last page was reached.
+  rcprotect:
+    description: Creates, removes, and configures protected wireless channels. 
+    usage: |
+      `/rcprotect [channel|listchannels] [protect|unprotect|add|remove] [users:names] [admins:names]`
+
+      - Use the command with `listchannels` to list all protected channels.
+      - Use the command with only a channel name to list users and admins of that channel.
+      - Use the command with a channel name and `protect` to protect a channel, you will automatically be added as an admin of the channel. You may also pass a list of users and/or admins.
+      - Use the command with a channel name and `unprotect` to remove protection for a channel.
+      - Use the command with a channel name and `add` or `remove` to add or remove admins and users of a channel. These commands require that you pass a list of users and/or admins.
+      
+      Users and admins should be passed in the form of `users:User1,User2,User3` and `admins:Admin1,Admin2,Admin3`.
+  rctool:
+    description: Set an item as a chip probe.
+    usage: |
+      `/rctool [clear|<item>]
+      
+      Run the command w/o arguments to set the item in your hand as the chip probe. 
+      Run `/rctool clear` to clear the tool item setting.
+      Run `/rctool <item>` to set the chip probe to the specifed item.
+      
+      - Use the chip probe on a chip i/o block to print information about the pin state.
+      - Use it on the chip sign to print info about the chip.
+      - Using it on any other chip block turns chip debug on and off. 
+  rcname:
+    aliases: [rcn]    
+    description: Name or unname a circuit for easier debugging.
+    usage: |
+      `/rcname [id] <new-name>` - change the chip name.
+      `/rcname [id] remove` - unname the chip.
+      
+      Point towards a chip and enter the command, or use the its id (including its existing name).
+permissions:
+  redstonechips.admin:
+    description: Grants access to all of RedstoneChips including admin commands.
+    children:
+      redstonechips.command.admin: true
+      redstonechips.circuit.*: true
+      redstonechips.channel.admin: true
+  redstonechips.*:
+    description: Grants access to all of RedstoneChips excluding admin commands.
+    children:
+      redstonechips.command.*: true
+      redstonechips.circuit.*: true
+  redstonechips.deny:
+    default: false
+    description: Denys access to all of RedstoneChips.
+    children:
+      redstonechips.command.deny: true
+      redstonechips.circuit.deny: true
+  redstonechips.command.*:
+    description: Grants access to all of RedstoneChips commands excluding admin commands.
+    children:
+      redstonechips.command.redstonechips: true
+      redstonechips.command.rclist: true
+      redstonechips.command.rcclasses: true
+      redstonechips.command.rcprefs: true
+      redstonechips.command.rcdebug: true
+      redstonechips.command.rcpin: true
+      redstonechips.command.rcactivate: true
+      redstonechips.command.rcbreak: true
+      redstonechips.command.rctype: true
+      redstonechips.command.rcreset: true
+      redstonechips.command.rcenable: true
+      redstonechips.command.rcdisable: true
+      redstonechips.command.rcchannels: true
+      redstonechips.command.rcinfo: true
+      redstonechips.command.rcfixioblocks: true
+      redstonechips.command.rcsel: true
+      redstonechips.command.rcarg: true
+      redstonechips.command.rchelp: true
+      redstonechips.command.rcprotect: true
+      redstonechips.command.rctool: true
+      redstonechips.command.rcname: true
+      redstonechips.command.rcsend: true      
+  redstonechips.command.admin:
+    description: Grants access to all of RedstoneChips commands including admin commands.
+    children:
+      redstonechips.command.*: true
+      redstonechips.command.rcload: true
+      redstonechips.command.rcsave: true
+      redstonechips.command.rcdestroy: true
+      redstonechips.command.rcprefs.set: true
+      redstonechips.command.rcreset.all: true
+      redstonechips.command.rcreset.id: true
+      redstonechips.command.rcenable.id: true
+      redstonechips.command.rcdisable.id: true
+      redstonechips.command.rcbreak.id: true
+      redstonechips.command.rcname.id: true
+      redstonechips.command.fixioblocks.id: true
+  redstonechips.command.deny:
+    default: false
+    description: Deny all commands.
+    children:
+      redstonechips.command.redstonechips.deny: true
+      redstonechips.command.rclist.deny: true
+      redstonechips.command.rcclasses.deny: true
+      redstonechips.command.rcprefs.deny: true
+      redstonechips.command.rcprefs.set.deny: true
+      redstonechips.command.rcdebug.deny: true
+      redstonechips.command.rcpin.deny: true
+      redstonechips.command.rcactivate.deny: true
+      redstonechips.command.rcbreak.deny: true
+      redstonechips.command.rctype.deny: true
+      redstonechips.command.rcreset.deny: true
+      redstonechips.command.rcreset.all.deny: true
+      redstonechips.command.rcreset.id.deny: true
+      redstonechips.command.rcenable.deny: true
+      redstonechips.command.rcenable.id.deny: true      
+      redstonechips.command.rcdisable.deny: true      
+      redstonechips.command.rcdisable.id.deny: true      
+      redstonechips.command.rcchannels.deny: true
+      redstonechips.command.rcinfo.deny: true
+      redstonechips.command.rcfixioblocks.deny: true
+      redstonechips.command.rcsel.deny: true
+      redstonechips.command.rcarg.deny: true
+      redstonechips.command.rchelp.deny: true
+      redstonechips.command.rcload.deny: true
+      redstonechips.command.rcsave.deny: true
+      redstonechips.command.rcdestroy.deny: true
+      redstonechips.command.rcprotect.deny: true
+      redstonechips.command.rcbreak.id.deny: true
+      redstonechips.command.fixioblocks.id.deny: true
+      redstonechips.command.rcreset.all.deny: true
+      redstonechips.command.rctool.deny: true
+      redstonechips.command.rcname.deny: true
+      redstonechips.command.rcname.id.deny: true
+      redstonechips.command.rcsend.deny: true
+  redstonechips.circuit.*:
+    description: Grants access to create and destroy all RedstoneChips circuits.
+    children:
+      redstonechips.circuit.destroy.*: true
+      redstonechips.circuit.create.*: true
+  redstonechips.circuit.deny:
+    default: false
+    description: Deny all circuits.
+    children:
+      redstonechips.circuit.destroy.deny: true
+      redstonechips.circuit.create.deny: true
+  redstonechips.command.redstonechips:
+    description: Grants the redstonechips command.
+  redstonechips.command.redstonechips.deny:
+    default: false
+    description: Denies the redstonechips command.
+  redstonechips.command.rclist:
+    description: Grants the rclist command.
+  redstonechips.command.rclist.deny:
+    description: Denies the rclist command.
+    default: false    
+  redstonechips.command.rcclasses:
+    description: Grants the rcclasses command.
+  redstonechips.command.rcclasses.deny:
+    default: false
+    description: Denies the rcclasses command.
+  redstonechips.command.rcprefs:
+    description: Grants the rcprefs command.
+  redstonechips.command.rcprefs.set:
+    description: Grants using the rcprefs command to set preferences.
+  redstonechips.command.rcprefs.deny:
+    default: false
+    description: Denies the rcprefs command.
+  redstonechips.command.rcprefs.set.deny:
+    default: false
+    description: Denies using the rcprefs command to set preferences.
+  redstonechips.command.rcdebug:
+    description: Grants the rcdebug command.
+  redstonechips.command.rcdebug.deny:
+    default: false
+    description: Denies the rcdebug command.
+  redstonechips.command.rcpin:
+    description: Grants the rcpin command.
+  redstonechips.command.rcpin.deny:
+    default: false
+    description: Denies the rcpin command.
+  redstonechips.command.rcactivate:
+    description: Grants the rcactivate command.
+  redstonechips.command.rcactivate.deny:
+    default: false
+    description: Denies the rcactivate command.
+  redstonechips.command.rcdestroy:
+    description: Grants the rcdestroy command.
+  redstonechips.command.rcdestroy.deny:
+    default: false
+    description: Denies the rcdestroy command.
+  redstonechips.command.rcbreak:
+    description: Grants the rcbreak command.
+  redstonechips.command.rcbreak.id:
+    description: Grants the rcbreak command with a circuit id.
+    default: false
+  redstonechips.command.rcbreak.deny:
+    default: false
+    description: Denies the rcbreak command.
+  redstonechips.command.rcbreak.id.deny:
+    description: Denies the rcbreak command with a circuit id.
+    default: false
+  redstonechips.command.rctype:
+    description: Grants the rctype command.
+  redstonechips.command.rctype.deny:
+    default: false
+    description: Denies the rctype command.    
+  redstonechips.command.rcreset:
+    description: Grants the rcreset command.
+  redstonechips.command.rcreset.id:
+    description: Grants the rcreset command with a circuit id.
+  redstonechips.command.rcreset.all:
+    description: Grants the rcreset all command.
+  redstonechips.command.rcreset.deny:
+    default: false
+    description: Denies the rcreset command.
+  redstonechips.command.rcreset.id.deny:
+    default: false
+    description: Denies the rcreset command with a circuit id.
+  redstonechips.command.rcreset.all.deny:
+    default: false
+    description: Denies the rcreset all command
+  redstonechips.command.rcenable:
+    description: Grants the rcenable command.
+  redstonechips.command.rcenable.id:    
+    description: Grants the rcenable command with a circuit id.    
+  redstonechips.command.rcenable.deny:
+    default: false
+    description: Denies the rcenable command.    
+  redstonechips.command.rcenable.id.deny:
+    default: false
+    description: Denies the rcenable command with a circuit id.    
+  redstonechips.command.rcdisable:
+    description: Grants the rcdisable command.
+  redstonechips.command.rcdisable.id:    
+    description: Grants the rcdisable command with a circuit id.    
+  redstonechips.command.rcdisable.deny:
+    default: false
+    description: Denies the rcdisable command.    
+  redstonechips.command.rcdisable.id.deny:
+    default: false
+    description: Denies the rcdisable command with a circuit id.    
+  redstonechips.command.rcchannels:
+    description: Grants the rcchannels command.
+  redstonechips.command.rcchannels.deny:
+    default: false
+    description: Denies the rcchannels command.
+  redstonechips.command.rcinfo:
+    description: Grants the rcinfo command.
+  redstonechips.command.rcinfo.deny:
+    default: false
+    description: Denies the rcinfo command.
+  redstonechips.command.rcfixioblocks:
+    description: Grants the rcfixioblocks command.
+  redstonechips.command.rcfixioblocks.id:
+    description: Grants the rcfixioblocks command with a circuit id.
+  redstonechips.command.rcfixioblocks.deny:
+    default: false
+    description: Denies the rcfixioblocks command.
+  redstonechips.command.rcfixioblocks.id.deny:
+    default: false
+    description: Denies the rcfixioblocks command with a circuit id.
+  redstonechips.command.rctool:
+    description: Grants the rctool command.
+  redstonechips.command.rctool.deny:
+    default: false
+    description: Denies the rctool command.
+  redstonechips.command.rcname:
+    description: Grants the rcname command.
+  redstonechips.command.rcname.deny:
+    default: false
+    description: Denies the rcname command.    
+  redstonechips.command.rcname.id:
+    description: Grants the rcname command with a circuit id.
+  redstonechips.command.rcname.id.deny:
+    default: false
+    description: Denies the rcname command with a circuit id.
+  redstonechips.command.rcsel:
+    description: Grants the rcsel command.
+  redstonechips.command.rcsel.deny:
+    default: false
+    description: Denies the rcsel command.
+  redstonechips.command.rcarg:
+    description: Grants the rcarg command.
+  redstonechips.command.rcarg.deny:
+    default: false
+    description: Denies the rcarg command.
+  redstonechips.command.rcsave:
+    description: Grants the rcsave command.
+  redstonechips.command.rcsave.deny:
+    default: false
+    description: Denies the rcsave command.
+  redstonechips.command.rcload:
+    description: Grants the rcload command.
+  redstonechips.command.rcload.deny:
+    default: false
+    description: Denies the rcload command.
+  redstonechips.command.rcportect:
+    description: Grants the rcprotect command.
+  redstonechips.command.rcprotect.deny:
+    default: false
+    description: Denies the rcprotect command.
+  redstonechips.command.rchelp:
+    description: Grants the rchelp command.
+  redstonechips.command.rchelp.deny:
+    default: false
+    description: Denies the rchelp command.
+  redstonechips.command.rcsend:
+    description: Grants the rcsend command.
+  redstonechips.command.rcsend.deny:
+    default: false
+    description: Denies the rcsend command.
+  redstonechips.circuit.destroy.*:
+    description: Grants permission to destroy all circuits.
+  redstonechips.circuit.create.*:
+    description: Grants permission to create all circuits.
+  redstonechips.circuit.destroy.deny:
+    default: false
+    description: Denies permission to destroy all circuits. 
+  redstonechips.circuit.create.deny:
+    default: false
+    description: Denies  permission to create all circuits.
+  redstonechips.channel.admin:
+    description: Grants admin rights to all channels.

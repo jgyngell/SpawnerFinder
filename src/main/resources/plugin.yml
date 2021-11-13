@@ -1,0 +1,14 @@
+main: org.jgcertified.spawnerfinder.SpawnerFinder
+name: SpawnerFinder
+version: 0.01
+api-version: 1.16
+author: jgcertified
+description: Points the compass toward the nearest mob spawner within an x chunk radius
+commands:
+  scompass:
+    description: Sets the compass to point toward nearest spawner
+    usage: "/scompass"
+permissions:
+  example.scompass:
+    description: DESCRIPTION
+    default: true

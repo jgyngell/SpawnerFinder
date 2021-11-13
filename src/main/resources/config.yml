@@ -1,0 +1,10 @@
+# Config for SpawnerFinder
+
+#
+radius: 3
+
+#
+mindistance: 5
+
+#
+marker: GOLD_BLOCK

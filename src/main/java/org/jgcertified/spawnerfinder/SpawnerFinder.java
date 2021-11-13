@@ -11,6 +11,7 @@ import org.bukkit.Material;
 import org.bukkit.World;
 
 import org.bukkit.command.*;
+import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
@@ -23,19 +24,69 @@ import org.bukkit.plugin.java.JavaPlugin;
  * @author Julian Gyngell.
  */
 public class SpawnerFinder extends JavaPlugin {
-	
+
 	Material markerBlock;
 	boolean allowMarkers;
 	int radius;
 	int minDist;
 
+	FileConfiguration config = getConfig();
+
 	@Override
 	public void onEnable() {
 		PaperLib.suggestPaper(this);
 
-		saveDefaultConfig();
+		this.getLogger().info("Starting SpawnFinder");
+
+		initConfig();
+		loadConfig();
+
+		this.getLogger().info("SpawnFinder started");
 
 		this.getCommand("scompass").setExecutor(new CommandFind());
+	}
+
+	public void initConfig()
+	{
+		config.addDefault("radius", 3);
+		config.addDefault("mindistance", 5);
+		config.addDefault("allow_markers", true);
+		config.addDefault("marker", "GOLD_BLOCK");
+
+		config.options().copyDefaults(true);
+
+		saveConfig();		
+	}
+
+	public void loadConfig()
+	{
+
+		allowMarkers = config.getBoolean("allow_markers");
+
+		if (allowMarkers)
+		{
+			markerBlock = Material.matchMaterial(config.getString("marker"));
+
+			if (markerBlock == null)
+			{
+
+				this.getLogger().warning(config.getString("marker") + " was not recognized as a valid block type. Defaulting to GOLD_BLOCK");
+
+				markerBlock = Material.GOLD_BLOCK;
+
+			} else {
+
+				this.getLogger().info("Set the marker block to: " + config.getString("marker"));
+			}
+		}
+
+		radius = config.getInt("radius");
+
+		this.getLogger().info("Setting search radius to " + radius + " chunks");
+
+		minDist = config.getInt("mindistance");
+
+		this.getLogger().info("Setting minimum distance to " + minDist + " blocks");
 	}
 
 	public class CommandFind implements CommandExecutor {

@@ -7,4 +7,7 @@ radius: 3
 mindistance: 5
 
 #
+allow_markers: true
+
+#
 marker: GOLD_BLOCK

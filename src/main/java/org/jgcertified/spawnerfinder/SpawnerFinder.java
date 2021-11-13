@@ -18,13 +18,14 @@ import org.bukkit.inventory.PlayerInventory;
 import org.bukkit.plugin.java.JavaPlugin;
 
 /**
- * Created by Levi Muniz on 7/29/20.
+ * Main SpawnerFinder class
  *
- * @author Copyright (c) Levi Muniz. All Rights Reserved.
+ * @author Julian Gyngell.
  */
 public class SpawnerFinder extends JavaPlugin {
 	
 	Material markerBlock;
+	boolean allowMarkers;
 	int radius;
 	int minDist;
 
@@ -35,7 +36,6 @@ public class SpawnerFinder extends JavaPlugin {
 		saveDefaultConfig();
 
 		this.getCommand("scompass").setExecutor(new CommandFind());
-
 	}
 
 	public class CommandFind implements CommandExecutor {
@@ -96,7 +96,7 @@ public class SpawnerFinder extends JavaPlugin {
 						for (int y = 0; y < snap.getHighestBlockYAt(x, z); y++)
 						{
 							//Is this block a spawner, and is it unmarked?
-							if(snap.getBlockType(x, y, z) == Material.SPAWNER && snap.getBlockType(x, y + 1, z) != markerBlock)
+							if(snap.getBlockType(x, y, z) == Material.SPAWNER && (snap.getBlockType(x, y + 1, z) != markerBlock && allowMarkers))
 							{
 
 								Location sLoc = c.getBlock(x, y, z).getLocation();
